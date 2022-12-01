@@ -68,11 +68,25 @@ export default function StudentsInputForm() {
                 Dynamically add/remove students
               </h5>
               <form onSubmit={handleSubmit(submitData)}>
+                <div className="row mb-3">
+                  <div className="form-group col-md-1"></div>
+                  <div className="form-group col-md-3">
+                    <label>Full name *</label>
+                  </div>
+                  <div className="form-group col-md-3">
+                    <label>Date of Birth - DOB</label>
+                  </div>
+                  <div className="form-group col-md-2">
+                    <label>Age</label>
+                  </div>
+                </div>
                 {inputList.map((x, i) => {
                   return (
                     <div key={i} className="row mb-3">
+                      <div className="form-group col-md-1">
+                        <h4>{i + 1}</h4>
+                      </div>
                       <div className="form-group col-md-3">
-                        <label>Full name *</label>
                         <input
                           key={'fullname' + i}
                           {...register('fullName' + i, {
@@ -88,7 +102,6 @@ export default function StudentsInputForm() {
                         )}
                       </div>
                       <div className="form-group col-md-3">
-                        <label>Date of Birth - DOB</label>
                         <DatePicker
                           selected={x.dateOfBirth}
                           className="form-control"
@@ -96,7 +109,6 @@ export default function StudentsInputForm() {
                         />
                       </div>
                       <div className="form-group col-md-2">
-                        <label>Age</label>
                         <input
                           type="number"
                           name="age"
@@ -104,7 +116,7 @@ export default function StudentsInputForm() {
                           onChange={(e) => handleInputChange(e, 'age', i)}
                         />
                       </div>
-                      <div className="form-group col-md-2 mt-4">
+                      <div className="form-group col-md-2">
                         {inputList.length !== 1 && (
                           <button
                             className="btn btn-danger mx-1"
