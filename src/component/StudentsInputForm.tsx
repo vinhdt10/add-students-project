@@ -34,7 +34,7 @@ export default function StudentsInputForm() {
     axios
       .post(URL, inputList)
       .then(() => {
-        setIsViewList(true)
+        setIsViewList(true) // flag to show list data
         toast.success('Successfully !')
       })
       .catch((error) => {
