@@ -1,55 +1,53 @@
-import React, {   useState } from 'react'
+import React, { useState } from 'react'
 import { Container } from 'react-bootstrap'
 import DatePicker from 'react-datepicker'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import Moment from 'react-moment'
+import _ from 'lodash'
 
 export default function StudentsInputForm() {
   const {
     register,
     handleSubmit,
+    control,
+    reset,
     formState: { errors },
-  } = useForm()
-
-  const [inputList, setInputList] = useState([
-    { fullName: '', dateOfBirth: '', age: 0 },
-  ])
+  } = useForm({defaultValues: {
+    students: [{ fullName: '', dateOfBirth: '' }]
+  }})
+  let { fields, append, remove } = useFieldArray({
+    control,
+    name: 'students',
+  })
 
   const [isViewList, setIsViewList] = useState(false)
   const URL = 'https://localhost:7055/v1/api/Students'
 
   const handleInputChange = (e, name, index) => {
     const { value } = e.target
-    const list = [...inputList]
-    list[index][name] = value
-    setInputList(list)
+
+    fields[index][name] = value
+    fields = [...fields]
   }
 
-  const resetForm = () => { 
+  const resetForm = () => {
     setIsViewList(false)
-
-    setInputList([{ fullName: '', dateOfBirth: '', age: 0 }])
-    // this.setState({ inputList: [] });
-    // setInputList([
-    //   { fullName: '', dateOfBirth: '', age: 0 },
-    // ])
-    console.log(inputList)
+    reset({ students: [{ fullName: '', dateOfBirth: '' }] })
   }
 
   const submitData = () => {
-    if (inputList.length < 3) {
+    if (fields.length < 3) {
       toast.warning('Please input >= 30 students !')
 
       return
     }
 
     axios
-      .post(URL, inputList)
+      .post(URL, fields)
       .then((response) => {
         setIsViewList(true) // flag to show list data
-        setInputList(response.data)
         toast.success('Successfully !')
       })
       .catch((error) => {
@@ -58,19 +56,14 @@ export default function StudentsInputForm() {
   }
 
   const setStartDate = (value, index) => {
-    let list = [...inputList]
-
-    list[index].dateOfBirth = value
-    setInputList(list)
+    (fields[index] as any).dateOfBirth = value
   }
 
   const handleRemove = (index) => {
-    const list = [...inputList]
-    list.splice(index, 1)
-    setInputList(list)
+    remove(index)
   }
   const handLeadClick = () => {
-    setInputList([...inputList, { fullName: '', dateOfBirth: '', age: 0 }])
+    append({ fullName: '', dateOfBirth: '' })
   }
   return (
     <div>
@@ -92,36 +85,58 @@ export default function StudentsInputForm() {
                     <label>Date of Birth - DOB</label>
                   </div>
                 </div>
-                {inputList.map((x, i) => {
+                {fields.map((x: any, i) => {
                   return (
                     <div key={i} className="row mb-3">
                       <div className="form-group col-md-1">
                         <h4>{i + 1}</h4>
                       </div>
-                      <div className="form-group col-md-3">
-                        <input
-                          key={'fullname' + i}
-                          {...register('fullName' + i, {
-                            required: true,
-                          })}
-                          className="form-control"
-                          onChange={(e) => handleInputChange(e, 'fullName', i)}
+                      <div className="form-group col-md-4">
+                        <Controller
+                          control={control}
+                          name={`students.${i}.fullName`}
+                          render={({ field }) => (
+                            <input
+                              key={i}
+                              {...register(`students.${i}.fullName`, {
+                                required: true,
+                              })}
+                              onChange={(e) => {
+                                field.onChange(e)
+                                handleInputChange(e, 'fullName', i)
+                              }}
+                              className="form-control"
+                            />
+                          )}
                         />
-                        {errors['fullName' + i] && (
-                          <span className="text-danger">
-                            This field is required
-                          </span>
-                        )}
+
+                        {!_.isEmpty(errors?.students?.[i]) &&
+                          !_.isEmpty(errors?.students?.[i])?.fullName &&
+                           (
+                            <span className="text-danger">
+                              This field is required
+                            </span>
+                          )}
+                      </div>
+                      <div className="form-group col-md-4">
+                        <Controller
+                          control={control}
+                          name={`students.${i}.dateOfBirth`}
+                          render={({ field }) => (
+                            <DatePicker
+                              placeholderText="Select date"
+                              className="form-control"
+                              onChange={(date) => {
+                                field.onChange(date)
+                                setStartDate(date, i)
+                              }}
+                              selected={field.value}
+                            />
+                          )}
+                        />
                       </div>
                       <div className="form-group col-md-3">
-                        <DatePicker
-                          selected={x.dateOfBirth}
-                          className="form-control"
-                          onChange={(date: Date) => setStartDate(date, i)}
-                        />
-                      </div>
-                      <div className="form-group col-md-2">
-                        {inputList.length !== 1 && (
+                        {fields.length !== 1 && (
                           <button
                             className="btn btn-danger mx-1"
                             onClick={() => handleRemove(i)}
@@ -129,7 +144,7 @@ export default function StudentsInputForm() {
                             Remove
                           </button>
                         )}
-                        {inputList.length - 1 === i && (
+                        {fields.length - 1 === i && (
                           <button
                             className="btn btn-success"
                             onClick={handLeadClick}
@@ -159,25 +174,20 @@ export default function StudentsInputForm() {
                 <tr>
                   <th scope="col">Full Name</th>
                   <th scope="col">Date of Birth</th>
-                  <th scope="col">Age</th>
                 </tr>
               </thead>
               <tbody>
-                {inputList.map((x, i) => (
+                {fields.map((x: any, i) => (
                   <tr key={i}>
                     <td>{x.fullName}</td>
                     <td>
-                    <Moment format="MM/DD/YYYY">{x.dateOfBirth}</Moment>
+                      <Moment format="MM/DD/YYYY">{x.dateOfBirth}</Moment>
                     </td>
-                    <td>{x.age}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <button
-              className="btn btn-outline-primary"
-              onClick={resetForm}
-            >
+            <button className="btn btn-outline-primary" onClick={resetForm}>
               Back
             </button>
           </div>
