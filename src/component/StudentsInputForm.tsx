@@ -30,7 +30,7 @@ export default function StudentsInputForm() {
   const resetForm = () => { 
     setIsViewList(false)
 
-    setInputList([...inputList, { fullName: '', dateOfBirth: '', age: 0 }])
+    setInputList([{ fullName: '', dateOfBirth: '', age: 0 }])
     // this.setState({ inputList: [] });
     // setInputList([
     //   { fullName: '', dateOfBirth: '', age: 0 },
@@ -176,9 +176,7 @@ export default function StudentsInputForm() {
             </table>
             <button
               className="btn btn-outline-primary"
-              onClick={() => {
-                resetForm()
-              }}
+              onClick={resetForm}
             >
               Back
             </button>
