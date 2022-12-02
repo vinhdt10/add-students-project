@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, {   useState } from 'react'
 import { Container } from 'react-bootstrap'
 import DatePicker from 'react-datepicker'
 import { useForm } from 'react-hook-form'
@@ -12,11 +12,14 @@ export default function StudentsInputForm() {
     handleSubmit,
     formState: { errors },
   } = useForm()
+
   const [inputList, setInputList] = useState([
     { fullName: '', dateOfBirth: '', age: 0 },
   ])
+
   const [isViewList, setIsViewList] = useState(false)
-  const URL = 'http://localhost:3000/students'
+  const URL = 'https://localhost:7055/v1/api/Students'
+
   const handleInputChange = (e, name, index) => {
     const { value } = e.target
     const list = [...inputList]
@@ -24,8 +27,19 @@ export default function StudentsInputForm() {
     setInputList(list)
   }
 
+  const resetForm = () => { 
+    setIsViewList(false)
+
+    setInputList([...inputList, { fullName: '', dateOfBirth: '', age: 0 }])
+    // this.setState({ inputList: [] });
+    // setInputList([
+    //   { fullName: '', dateOfBirth: '', age: 0 },
+    // ])
+    console.log(inputList)
+  }
+
   const submitData = () => {
-    if (inputList.length < 30) {
+    if (inputList.length < 3) {
       toast.warning('Please input >= 30 students !')
 
       return
@@ -33,8 +47,9 @@ export default function StudentsInputForm() {
 
     axios
       .post(URL, inputList)
-      .then(() => {
+      .then((response) => {
         setIsViewList(true) // flag to show list data
+        setInputList(response.data)
         toast.success('Successfully !')
       })
       .catch((error) => {
@@ -76,9 +91,6 @@ export default function StudentsInputForm() {
                   <div className="form-group col-md-3">
                     <label>Date of Birth - DOB</label>
                   </div>
-                  <div className="form-group col-md-2">
-                    <label>Age</label>
-                  </div>
                 </div>
                 {inputList.map((x, i) => {
                   return (
@@ -106,14 +118,6 @@ export default function StudentsInputForm() {
                           selected={x.dateOfBirth}
                           className="form-control"
                           onChange={(date: Date) => setStartDate(date, i)}
-                        />
-                      </div>
-                      <div className="form-group col-md-2">
-                        <input
-                          type="number"
-                          name="age"
-                          className="form-control"
-                          onChange={(e) => handleInputChange(e, 'age', i)}
                         />
                       </div>
                       <div className="form-group col-md-2">
@@ -154,7 +158,7 @@ export default function StudentsInputForm() {
               <thead>
                 <tr>
                   <th scope="col">Full Name</th>
-                  <th scope="col">Date of Birth - DOB</th>
+                  <th scope="col">Date of Birth</th>
                   <th scope="col">Age</th>
                 </tr>
               </thead>
@@ -163,7 +167,7 @@ export default function StudentsInputForm() {
                   <tr key={i}>
                     <td>{x.fullName}</td>
                     <td>
-                      <Moment format="MM/DD/YYYY">{x.dateOfBirth}</Moment>
+                    <Moment format="MM/DD/YYYY">{x.dateOfBirth}</Moment>
                     </td>
                     <td>{x.age}</td>
                   </tr>
@@ -173,7 +177,7 @@ export default function StudentsInputForm() {
             <button
               className="btn btn-outline-primary"
               onClick={() => {
-                setIsViewList(false)
+                resetForm()
               }}
             >
               Back
